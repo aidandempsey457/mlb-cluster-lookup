@@ -8,26 +8,22 @@ from sklearn.cluster import KMeans
 import umap
 from pybaseball import statcast, playerid_reverse_lookup
 
-# === STEP 0: Setup Safe Paths ===
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-data_dir = os.path.join(SCRIPT_DIR, "data")
-output_dir = os.path.join(SCRIPT_DIR, "output")
-os.makedirs(data_dir, exist_ok=True)
-os.makedirs(output_dir, exist_ok=True)
+# === STEP 0: Setup Local Folders (Relative Paths) ===
+os.makedirs("data", exist_ok=True)
+os.makedirs("output", exist_ok=True)
 
 # === STEP 1: Pull and Save Statcast Data ===
 start_date = "2025-03-20"
 today = date.today().strftime("%Y-%m-%d")
-data_filename = f"statcast_2025_through_{today}.xlsx"
-data_path = os.path.join(data_dir, data_filename)
+data_filename = f"data/statcast_2025_through_{today}.xlsx"
 
 print(f"📡 Pulling Statcast data from {start_date} to {today}...")
 df = statcast(start_dt=start_date, end_dt=today)
-df.to_excel(data_path, index=False)
-print(f"✅ Saved raw Statcast data to: {data_path}")
+df.to_excel(data_filename, index=False)
+print(f"✅ Saved Statcast data to: {data_filename}")
 
 # === STEP 2: Load Excel Data ===
-df = pd.read_excel(data_path)
+df = pd.read_excel(data_filename)
 df = df[df['pitch_type'].notna()]
 
 # === STEP 3: Pitcher Feature Engineering ===
@@ -175,7 +171,7 @@ definitions = {
 definitions_df = pd.DataFrame(list(definitions.items()), columns=["Metric", "Definition"])
 
 # === STEP 14: Save All Outputs ===
-output_file = os.path.join(output_dir, f"relational_cluster_2025_{today}.xlsx")
+output_file = f"output/relational_cluster_2025_{today}.xlsx"
 with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
     result.to_excel(writer, sheet_name="Pitcher Clusters", index=False)
     batter_vs_cluster.to_excel(writer, sheet_name="Batter vs Cluster", index=False)
@@ -185,4 +181,4 @@ with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
     focused_batter_metrics.to_excel(writer, sheet_name="Focused batter metrics", index=False)
     definitions_df.to_excel(writer, sheet_name="Metric Definitions", index=False)
 
-print(f"\n✅ Final Excel with enhancements saved to:\n{output_file}")
+print(f"\n✅ Final Excel with enhancements saved to: {output_file}")
